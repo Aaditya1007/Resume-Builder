@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+const { useState, useRef } = React;
 
 /**
  * Resume Builder — Aaditya Template (React, plain JSX)
