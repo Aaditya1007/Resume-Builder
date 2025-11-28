@@ -33,6 +33,111 @@ function App() {
   const handlePrint = () => window.print();
   const handleRunTests = () => setTests(runBasicTests(data));
 
+  const handleExportPdf = async () => {
+    const node = printAreaRef.current || document.querySelector('.resume-a4');
+    if (!node || !window.html2pdf) return;
+    const opt = {
+      margin:       [0, 0, 0, 0],
+      filename:     'Aaditya_Agrawal_Resume.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#FFFFFF' },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    // Force ATS mode to avoid split-columns if you prefer single-column:
+    // const old = atsMode; setAtsMode(true);
+    await window.html2pdf().set(opt).from(node).save();
+    // setAtsMode(old);
+  };
+
+  const handleExportDocx = async () => {
+    if (!window.docx) return;
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
+
+    // Helpers
+    const H = (text) => new Paragraph({ text, heading: HeadingLevel.HEADING_2, spacing: { after: 120 } });
+    const P = (text) => new Paragraph({ children: [ new TextRun({ text }) ], spacing: { after: 120 } });
+    const B = (text) => new Paragraph({ bullet: { level: 0 }, children: [ new TextRun({ text }) ] });
+
+    const docChildren = [];
+
+    // Header
+    docChildren.push(new Paragraph({
+      children: [ new TextRun({ text: data.header.name, bold: true, size: 28 }) ],
+      spacing: { after: 60 }
+    }));
+    if (data.header.title) docChildren.push(P(data.header.title));
+
+    const contacts = [data.header.location, data.header.email, data.header.phone, data.header.linkedin]
+      .filter(Boolean).join(' | ');
+    if (contacts) docChildren.push(P(contacts));
+
+    // Summary
+    if (data.summary) {
+      docChildren.push(H('SUMMARY'));
+      data.summary.split('\n').forEach(line => docChildren.push(P(line)));
+    }
+
+    // Core Skills
+    if (data.coreSkills) {
+      docChildren.push(H('CORE SKILLS'));
+      data.coreSkills.split('\n').forEach(line => docChildren.push(P(line)));
+    }
+
+    // Experience
+    if (Array.isArray(data.experience) && data.experience.length) {
+      docChildren.push(H('EXPERIENCE'));
+      data.experience.forEach(x => {
+        const title = [x.role, x.company].filter(Boolean).join(', ');
+        const meta = [x.dates, x.location].filter(Boolean).join('  ·  ');
+        if (title) docChildren.push(new Paragraph({ children: [ new TextRun({ text: title, bold: true }) ] }));
+        if (meta)  docChildren.push(P(meta));
+        (x.bullets || []).forEach(b => docChildren.push(B(b)));
+        docChildren.push(new Paragraph({})); // spacer
+      });
+    }
+
+    // Education
+    if (Array.isArray(data.education) && data.education.length) {
+      docChildren.push(H('EDUCATION'));
+      data.education.forEach(x => {
+        const title = x.degree || '';
+        const sch   = x.school || '';
+        const meta  = [x.dates, x.location].filter(Boolean).join('  ·  ');
+        if (title) docChildren.push(new Paragraph({ children: [ new TextRun({ text: title, bold: true }) ] }));
+        if (sch)   docChildren.push(P(sch));
+        if (meta)  docChildren.push(P(meta));
+        docChildren.push(new Paragraph({}));
+      });
+    }
+
+    // Projects
+    if (Array.isArray(data.projects) && data.projects.length) {
+      docChildren.push(H('PROJECTS'));
+      data.projects.forEach(x => {
+        const title = [x.title, x.org].filter(Boolean).join(', ');
+        const meta  = [x.dates, x.location].filter(Boolean).join('  ·  ');
+        if (title) docChildren.push(new Paragraph({ children: [ new TextRun({ text: title, bold: true }) ] }));
+        if (meta)  docChildren.push(P(meta));
+        (x.bullets || []).forEach(b => docChildren.push(B(b)));
+        docChildren.push(new Paragraph({}));
+      });
+    }
+
+    // Skills (as bullets)
+    if (Array.isArray(data.skills) && data.skills.length) {
+      docChildren.push(H('SKILLS / TOOLS'));
+      data.skills.forEach(s => docChildren.push(B(s)));
+    }
+
+    const doc = new Document({ sections: [{ properties: {}, children: docChildren }] });
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'Aaditya_Agrawal_Resume.docx';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-neutral-100 text-neutral-900" style={{ ['--accent']: '#2B6CB0' }}>
       {/* App header */}
@@ -53,6 +158,13 @@ function App() {
             <button onClick={handleRunTests} className="px-3 py-2 rounded-xl border text-sm hover:bg-neutral-50">Run tests</button>
             <button onClick={() => setData(defaultData)} className="px-3 py-2 rounded-xl border text-sm hover:bg-neutral-50">Load sample</button>
             <button onClick={() => setData(emptyData())} className="px-3 py-2 rounded-xl border text-sm hover:bg-neutral-50">Clear all</button>
+            
+            <button onClick={handleExportPdf} className="px-3 py-2 rounded-xl text-white text-sm font-medium" style={{ backgroundColor: 'var(--accent)' }}>
+              Export PDF
+            </button>
+            <button onClick={handleExportDocx} className="px-3 py-2 rounded-xl border text-sm hover:bg-neutral-50">
+              Export DOCX
+            </button>
             <button onClick={handlePrint} className="px-4 py-2 rounded-xl text-white text-sm font-medium" style={{ backgroundColor: 'var(--accent)' }}>Download PDF</button>
           </div>
         </div>
