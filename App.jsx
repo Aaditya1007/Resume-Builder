@@ -1,48 +1,45 @@
 import React, { useRef, useState } from "react";
 
 /**
- * Resume Builder — Aaditya Template (React)
- * v3 — Fix runtime error ('return' outside function), clean types, add tests, keep ATS Mode.
- *
- * Notes:
- * - Blue accent: #2B6CB0
- * - ATS Mode: single column, system fonts, no special chars in separators.
- * - Export: Print → A4 → No margins → Background graphics ON.
+ * Resume Builder — Aaditya Template (React, plain JSX)
+ * v4 — Converted to .jsx for GitHub Pages/CDN use (no TypeScript, no modules).
+ * - Keeps ATS Mode, tests, blue accent, contact row under name.
+ * - Removes TS types/generics and the `export default` so <script type="text/babel"> works.
  */
 
-export default function App() {
-  const [data, setData] = useState<ResumeData>(defaultData);
-  const [atsMode, setAtsMode] = useState<boolean>(false);
-  const [tests, setTests] = useState<TestResult[] | null>(null);
-  const printAreaRef = useRef<HTMLDivElement | null>(null);
+function App() {
+  const [data, setData] = useState(defaultData);
+  const [atsMode, setAtsMode] = useState(false);
+  const [tests, setTests] = useState(null);
+  const printAreaRef = useRef(null);
 
-  const onChange = (path: string, value: any) => setData(prev => setDeep(prev, path, value));
+  const onChange = (path, value) => setData(prev => setDeep(prev, path, value));
 
-  const addItem = (path: keyof ResumeData, template: any) =>
-    setData(prev => ({ ...prev, [path]: [...(prev[path] as any[]), structuredClone(template)] }));
+  const addItem = (path, template) =>
+    setData(prev => ({ ...prev, [path]: [...(prev[path] || []), structuredClone(template)] }));
 
-  const removeItem = (path: keyof ResumeData, idx: number) =>
-    setData(prev => ({ ...prev, [path]: (prev[path] as any[]).filter((_, i) => i !== idx) }));
+  const removeItem = (path, idx) =>
+    setData(prev => ({ ...prev, [path]: (prev[path] || []).filter((_, i) => i !== idx) }));
 
-  const moveItem = (path: keyof ResumeData, idx: number, dir: -1 | 1) =>
+  const moveItem = (path, idx, dir) =>
     setData(prev => {
-      const arr = [...(prev[path] as any[])];
+      const arr = [...(prev[path] || [])];
       const j = idx + dir;
       if (j < 0 || j >= arr.length) return prev;
       [arr[idx], arr[j]] = [arr[j], arr[idx]];
-      return { ...prev, [path]: arr } as ResumeData;
+      return { ...prev, [path]: arr };
     });
 
   const handlePrint = () => window.print();
   const handleRunTests = () => setTests(runBasicTests(data));
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-neutral-900" style={{ ["--accent" as any]: "#2B6CB0" }}>
+    <div className="min-h-screen bg-neutral-100 text-neutral-900" style={{ ['--accent']: '#2B6CB0' }}>
       {/* App header */}
       <div className="sticky top-0 z-30 bg-white border-b border-neutral-200">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3 justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl text-white grid place-items-center text-sm font-semibold" style={{ backgroundColor: "var(--accent)" }}>RB</div>
+            <div className="h-8 w-8 rounded-xl text-white grid place-items-center text-sm font-semibold" style={{ backgroundColor: 'var(--accent)' }}>RB</div>
             <div>
               <div className="text-sm uppercase tracking-wide text-neutral-500">Resume Builder</div>
               <div className="text-base font-semibold">Aaditya Template</div>
@@ -56,7 +53,7 @@ export default function App() {
             <button onClick={handleRunTests} className="px-3 py-2 rounded-xl border text-sm hover:bg-neutral-50">Run tests</button>
             <button onClick={() => setData(defaultData)} className="px-3 py-2 rounded-xl border text-sm hover:bg-neutral-50">Load sample</button>
             <button onClick={() => setData(emptyData())} className="px-3 py-2 rounded-xl border text-sm hover:bg-neutral-50">Clear all</button>
-            <button onClick={handlePrint} className="px-4 py-2 rounded-xl text-white text-sm font-medium" style={{ backgroundColor: "var(--accent)" }}>Download PDF</button>
+            <button onClick={handlePrint} className="px-4 py-2 rounded-xl text-white text-sm font-medium" style={{ backgroundColor: 'var(--accent)' }}>Download PDF</button>
           </div>
         </div>
         {tests && (
@@ -65,8 +62,8 @@ export default function App() {
               <div className="font-semibold mb-1">Test results</div>
               <ul className="list-disc pl-5 space-y-1">
                 {tests.map((t, i) => (
-                  <li key={i} className={t.pass ? "text-green-700" : "text-red-700"}>
-                    {t.pass ? "PASS" : "FAIL"}: {t.name} {t.message ? `– ${t.message}` : ""}
+                  <li key={i} className={t.pass ? 'text-green-700' : 'text-red-700'}>
+                    {t.pass ? 'PASS' : 'FAIL'}: {t.name} {t.message ? `– ${t.message}` : ''}
                   </li>
                 ))}
               </ul>
@@ -99,30 +96,30 @@ export default function App() {
 }
 
 // ========================= Editor ========================= //
-function Editor({ data, onChange, addItem, removeItem, moveItem }: EditorProps) {
+function Editor({ data, onChange, addItem, removeItem, moveItem }) {
   return (
     <div className="space-y-6">
       <Panel title="Header">
         <Grid two>
-          <Text label="Full name" value={data.header.name} onChange={v => onChange("header.name", v)} />
-          <Text label="Headline" value={data.header.title} onChange={v => onChange("header.title", v)} />
+          <Text label="Full name" value={data.header.name} onChange={v => onChange('header.name', v)} />
+          <Text label="Headline" value={data.header.title} onChange={v => onChange('header.title', v)} />
         </Grid>
         <Grid two>
-          <Text label="Phone" value={data.header.phone} onChange={v => onChange("header.phone", v)} />
-          <Text label="Email" value={data.header.email} onChange={v => onChange("header.email", v)} />
+          <Text label="Phone" value={data.header.phone} onChange={v => onChange('header.phone', v)} />
+          <Text label="Email" value={data.header.email} onChange={v => onChange('header.email', v)} />
         </Grid>
         <Grid two>
-          <Text label="LinkedIn" value={data.header.linkedin} onChange={v => onChange("header.linkedin", v)} />
-          <Text label="Location" value={data.header.location} onChange={v => onChange("header.location", v)} />
+          <Text label="LinkedIn" value={data.header.linkedin} onChange={v => onChange('header.linkedin', v)} />
+          <Text label="Location" value={data.header.location} onChange={v => onChange('header.location', v)} />
         </Grid>
       </Panel>
 
       <Panel title="Professional Summary">
-        <Textarea value={data.summary} onChange={v => onChange("summary", v)} rows={5} />
+        <Textarea value={data.summary} onChange={v => onChange('summary', v)} rows={5} />
       </Panel>
 
       <Panel title="Core Skills (grouped)">
-        <Textarea value={data.coreSkills || ""} onChange={v => onChange("coreSkills", v)} rows={8} />
+        <Textarea value={data.coreSkills || ''} onChange={v => onChange('coreSkills', v)} rows={8} />
       </Panel>
 
       <Panel title="Experience">
@@ -138,15 +135,15 @@ function Editor({ data, onChange, addItem, removeItem, moveItem }: EditorProps) 
             </Grid>
             <ListEditor label="Highlights" items={x.bullets} onChange={arr => onChange(`experience.${i}.bullets`, arr)} />
             <Row>
-              <SmallBtn onClick={() => moveItem("experience", i, -1)}>↑</SmallBtn>
-              <SmallBtn onClick={() => moveItem("experience", i, 1)}>↓</SmallBtn>
-              <SmallBtn onClick={() => removeItem("experience", i)} danger>
+              <SmallBtn onClick={() => moveItem('experience', i, -1)}>↑</SmallBtn>
+              <SmallBtn onClick={() => moveItem('experience', i, 1)}>↓</SmallBtn>
+              <SmallBtn onClick={() => removeItem('experience', i)} danger>
                 Remove
               </SmallBtn>
             </Row>
           </div>
         ))}
-        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem("experience", blankExperience())}>
+        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem('experience', blankExperience())}>
           Add role
         </button>
       </Panel>
@@ -163,15 +160,15 @@ function Editor({ data, onChange, addItem, removeItem, moveItem }: EditorProps) 
               <Text label="Location" value={x.location} onChange={v => onChange(`education.${i}.location`, v)} />
             </Grid>
             <Row>
-              <SmallBtn onClick={() => moveItem("education", i, -1)}>↑</SmallBtn>
-              <SmallBtn onClick={() => moveItem("education", i, 1)}>↓</SmallBtn>
-              <SmallBtn onClick={() => removeItem("education", i)} danger>
+              <SmallBtn onClick={() => moveItem('education', i, -1)}>↑</SmallBtn>
+              <SmallBtn onClick={() => moveItem('education', i, 1)}>↓</SmallBtn>
+              <SmallBtn onClick={() => removeItem('education', i)} danger>
                 Remove
               </SmallBtn>
             </Row>
           </div>
         ))}
-        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem("education", blankEducation())}>
+        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem('education', blankEducation())}>
           Add education
         </button>
       </Panel>
@@ -189,21 +186,21 @@ function Editor({ data, onChange, addItem, removeItem, moveItem }: EditorProps) 
             </Grid>
             <ListEditor label="Highlights" items={x.bullets} onChange={arr => onChange(`projects.${i}.bullets`, arr)} />
             <Row>
-              <SmallBtn onClick={() => moveItem("projects", i, -1)}>↑</SmallBtn>
-              <SmallBtn onClick={() => moveItem("projects", i, 1)}>↓</SmallBtn>
-              <SmallBtn onClick={() => removeItem("projects", i)} danger>
+              <SmallBtn onClick={() => moveItem('projects', i, -1)}>↑</SmallBtn>
+              <SmallBtn onClick={() => moveItem('projects', i, 1)}>↓</SmallBtn>
+              <SmallBtn onClick={() => removeItem('projects', i)} danger>
                 Remove
               </SmallBtn>
             </Row>
           </div>
         ))}
-        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem("projects", blankProject())}>
+        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem('projects', blankProject())}>
           Add project
         </button>
       </Panel>
 
       <Panel title="Skills / Tools (tags)">
-        <TagEditor items={data.skills} onChange={arr => onChange("skills", arr)} placeholder="e.g., Python" />
+        <TagEditor items={data.skills} onChange={arr => onChange('skills', arr)} placeholder="e.g., Python" />
       </Panel>
 
       <Panel title="Publications">
@@ -216,15 +213,15 @@ function Editor({ data, onChange, addItem, removeItem, moveItem }: EditorProps) 
             </Grid>
             <Textarea label="Summary" value={x.summary} onChange={v => onChange(`publications.${i}.summary`, v)} rows={3} />
             <Row>
-              <SmallBtn onClick={() => moveItem("publications", i, -1)}>↑</SmallBtn>
-              <SmallBtn onClick={() => moveItem("publications", i, 1)}>↓</SmallBtn>
-              <SmallBtn onClick={() => removeItem("publications", i)} danger>
+              <SmallBtn onClick={() => moveItem('publications', i, -1)}>↑</SmallBtn>
+              <SmallBtn onClick={() => moveItem('publications', i, 1)}>↓</SmallBtn>
+              <SmallBtn onClick={() => removeItem('publications', i)} danger>
                 Remove
               </SmallBtn>
             </Row>
           </div>
         ))}
-        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem("publications", blankPublication())}>
+        <button className="mt-2 px-3 py-2 rounded-xl border text-sm" onClick={() => addItem('publications', blankPublication())}>
           Add publication
         </button>
       </Panel>
@@ -233,14 +230,14 @@ function Editor({ data, onChange, addItem, removeItem, moveItem }: EditorProps) 
 }
 
 // ========================= Preview (A4) ========================= //
-const ResumeA4 = React.forwardRef<HTMLDivElement, { data: ResumeData; atsMode: boolean }>(function ResumeA4({ data, atsMode }, ref) {
+const ResumeA4 = React.forwardRef(function ResumeA4({ data, atsMode }, ref) {
   const contactParts = [data.header.phone, data.header.email, data.header.linkedin, data.header.location].filter(Boolean);
-  const sep = atsMode ? " | " : " • ";
+  const sep = atsMode ? ' | ' : ' • ';
   return (
     <div ref={ref} className="resume-a4 mx-auto w-[210mm] bg-white text-[11pt] leading-[1.35]">
       <div className="p-[14mm]">
         {/* Header */}
-        <header className="pb-3 border-b" style={{ borderColor: "var(--accent)" }}>
+        <header className="pb-3 border-b" style={{ borderColor: 'var(--accent)' }}>
           <h1 className="text-[20pt] font-extrabold tracking-tight">{data.header.name}</h1>
           <div className="text-neutral-800 font-medium">{data.header.title}</div>
           <div className="mt-1 text-[10pt] text-neutral-900 flex flex-wrap gap-x-3 gap-y-1">
@@ -283,7 +280,7 @@ const ResumeA4 = React.forwardRef<HTMLDivElement, { data: ResumeData; atsMode: b
                   <div key={i} className="mb-3 last:mb-0">
                     <div className="font-semibold">{x.degree}</div>
                     <div className="text-[10pt]">{x.school}</div>
-                    <div className="text-[9.5pt] text-neutral-600">{x.dates}{x.location ? `  ·  ${x.location}` : ""}</div>
+                    <div className="text-[9.5pt] text-neutral-600">{x.dates}{x.location ? `  ·  ${x.location}` : ''}</div>
                   </div>
                 ))}
               </Section>
@@ -333,7 +330,7 @@ const ResumeA4 = React.forwardRef<HTMLDivElement, { data: ResumeData; atsMode: b
                 <div key={i} className="mb-3 last:mb-0">
                   <div className="font-semibold">{x.degree}</div>
                   <div className="text-[10pt]">{x.school}</div>
-                  <div className="text-[9.5pt] text-neutral-600">{x.dates}{x.location ? `  ·  ${x.location}` : ""}</div>
+                  <div className="text-[9.5pt] text-neutral-600">{x.dates}{x.location ? `  ·  ${x.location}` : ''}</div>
                 </div>
               ))}
             </Section>
@@ -371,24 +368,24 @@ const ResumeA4 = React.forwardRef<HTMLDivElement, { data: ResumeData; atsMode: b
   );
 });
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }) {
   return (
     <section className="mb-4">
-      <h2 className="text-[11pt] font-extrabold tracking-wider mb-1.5" style={{ color: "var(--accent)" }}>{title}</h2>
-      <div className="h-[2px] mb-2" style={{ backgroundColor: "var(--accent)" }} />
+      <h2 className="text-[11pt] font-extrabold tracking-wider mb-1.5" style={{ color: 'var(--accent)' }}>{title}</h2>
+      <div className="h-[2px] mb-2" style={{ backgroundColor: 'var(--accent)' }} />
       {children}
     </section>
   );
 }
 
-function Entry({ role, company, dates, location, bullets }: { role: string; company: string; dates: string; location?: string; bullets: string[] }) {
+function Entry({ role, company, dates, location, bullets }) {
   return (
     <div className="mb-3 last:mb-0">
       <div className="flex items-baseline justify-between gap-4">
         <div className="font-semibold">
-          {role}{company ? `, ${company}` : ""}
+          {role}{company ? `, ${company}` : ''}
         </div>
-        <div className="text-[9.5pt] text-neutral-600 whitespace-nowrap">{dates}{location ? `  ·  ${location}` : ""}</div>
+        <div className="text-[9.5pt] text-neutral-600 whitespace-nowrap">{dates}{location ? `  ·  ${location}` : ''}</div>
       </div>
       {bullets && bullets.length > 0 && (
         <ul className="mt-1 list-disc pl-5 space-y-0.5 text-[10.5pt] text-neutral-800">
@@ -402,7 +399,7 @@ function Entry({ role, company, dates, location, bullets }: { role: string; comp
 }
 
 // ========================= Small UI bits ========================= //
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, children }) {
   return (
     <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden">
       <div className="px-4 py-2 text-xs uppercase tracking-wider text-neutral-600 bg-neutral-50 border-b">{title}</div>
@@ -411,19 +408,19 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function Grid({ two = false, children }: { two?: boolean; children: React.ReactNode }) {
-  return <div className={two ? "grid grid-cols-2 gap-3" : "grid gap-3"}>{children}</div>;
+function Grid({ two = false, children }) {
+  return <div className={two ? 'grid grid-cols-2 gap-3' : 'grid gap-3'}>{children}</div>;
 }
 
-function Row({ children }: { children: React.ReactNode }) {
+function Row({ children }) {
   return <div className="flex items-center gap-2 mt-2">{children}</div>;
 }
 
-function Label({ children }: { children?: React.ReactNode }) {
+function Label({ children }) {
   return <div className="text-[11px] font-medium text-neutral-600 mb-1">{children}</div>;
 }
 
-function Text({ label, value, onChange }: { label?: string; value: string; onChange: (v: string) => void }) {
+function Text({ label, value, onChange }) {
   return (
     <label className="block">
       {label && <Label>{label}</Label>}
@@ -432,7 +429,7 @@ function Text({ label, value, onChange }: { label?: string; value: string; onCha
   );
 }
 
-function Textarea({ label, value, onChange, rows = 4 }: { label?: string; value: string; onChange: (v: string) => void; rows?: number }) {
+function Textarea({ label, value, onChange, rows = 4 }) {
   return (
     <label className="block">
       {label && <Label>{label}</Label>}
@@ -441,16 +438,16 @@ function Textarea({ label, value, onChange, rows = 4 }: { label?: string; value:
   );
 }
 
-function SmallBtn({ children, onClick, danger }: { children: React.ReactNode; onClick: () => void; danger?: boolean }) {
+function SmallBtn({ children, onClick, danger }) {
   return (
-    <button onClick={onClick} className={`px-2 py-1 rounded-lg text-xs border ${danger ? "border-red-300 text-red-700 hover:bg-red-50" : "border-neutral-300 text-neutral-800 hover:bg-neutral-50"}`}>
+    <button onClick={onClick} className={`px-2 py-1 rounded-lg text-xs border ${danger ? 'border-red-300 text-red-700 hover:bg-red-50' : 'border-neutral-300 text-neutral-800 hover:bg-neutral-50'}`}>
       {children}
     </button>
   );
 }
 
-function ListEditor({ label = "Items", items, onChange }: { label?: string; items: string[]; onChange: (arr: string[]) => void }) {
-  const [draft, setDraft] = useState("");
+function ListEditor({ label = 'Items', items, onChange }) {
+  const [draft, setDraft] = useState('');
   return (
     <div>
       <Label>{label}</Label>
@@ -470,7 +467,7 @@ function ListEditor({ label = "Items", items, onChange }: { label?: string; item
           onClick={() => {
             if (!draft.trim()) return;
             onChange([...items, draft.trim()]);
-            setDraft("");
+            setDraft('');
           }}
         >
           Add
@@ -480,8 +477,8 @@ function ListEditor({ label = "Items", items, onChange }: { label?: string; item
   );
 }
 
-function TagEditor({ items, onChange, placeholder = "Add skill" }: { items: string[]; onChange: (arr: string[]) => void; placeholder?: string }) {
-  const [draft, setDraft] = useState("");
+function TagEditor({ items, onChange, placeholder = 'Add skill' }) {
+  const [draft, setDraft] = useState('');
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-2">
@@ -498,7 +495,7 @@ function TagEditor({ items, onChange, placeholder = "Add skill" }: { items: stri
           onClick={() => {
             if (!draft.trim()) return;
             onChange([...items, draft.trim()]);
-            setDraft("");
+            setDraft('');
           }}
         >
           Add
@@ -509,10 +506,10 @@ function TagEditor({ items, onChange, placeholder = "Add skill" }: { items: stri
 }
 
 // ========================= Helpers & Data ========================= //
-function setDeep(obj: any, path: string, value: any) {
-  const keys = path.split(".");
+function setDeep(obj, path, value) {
+  const keys = path.split('.');
   const copy = structuredClone(obj);
-  let cur = copy as any;
+  let cur = copy;
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i];
     if (!(k in cur)) cur[k] = {};
@@ -522,16 +519,16 @@ function setDeep(obj: any, path: string, value: any) {
   return copy;
 }
 
-function blankExperience(): Experience { return { role: "", company: "", dates: "", location: "", bullets: [] }; }
-function blankEducation(): Education { return { degree: "", school: "", dates: "", location: "" }; }
-function blankProject(): Project { return { title: "", org: "", dates: "", location: "", bullets: [] }; }
-function blankPublication(): Publication { return { title: "", venue: "", meta: "", summary: "" }; }
+function blankExperience() { return { role: '', company: '', dates: '', location: '', bullets: [] }; }
+function blankEducation() { return { degree: '', school: '', dates: '', location: '' }; }
+function blankProject() { return { title: '', org: '', dates: '', location: '', bullets: [] }; }
+function blankPublication() { return { title: '', venue: '', meta: '', summary: '' }; }
 
-function emptyData(): ResumeData {
+function emptyData() {
   return {
-    header: { name: "", title: "", phone: "", email: "", linkedin: "", location: "" },
-    summary: "",
-    coreSkills: "",
+    header: { name: '', title: '', phone: '', email: '', linkedin: '', location: '' },
+    summary: '',
+    coreSkills: '',
     experience: [blankExperience()],
     education: [blankEducation()],
     projects: [blankProject()],
@@ -541,116 +538,116 @@ function emptyData(): ResumeData {
 }
 
 // ========================= Default data ========================= //
-const defaultData: ResumeData = {
+const defaultData = {
   header: {
-    name: "AADITYA AGRAWAL",
-    title: "Data & Research Analyst",
-    phone: "+44 7867 235 844",
-    email: "aadityaagr1007@gmail.com",
-    linkedin: "linkedin.com/in/aaditya-agrawal",
-    location: "London, UK",
+    name: 'AADITYA AGRAWAL',
+    title: 'Data & Research Analyst',
+    phone: '+44 7867 235 844',
+    email: 'aadityaagr1007@gmail.com',
+    linkedin: 'linkedin.com/in/aaditya-agrawal',
+    location: 'London, UK',
   },
   summary:
-    "Analyst-scientist hybrid delivering end to end Python workflows, reproducible analytics, and custom visualisation. Build tools that standardise classification rules and automate reporting. Write clean, documented code and move reliably from ingestion to decision-ready insight in lean teams.",
+    'Analyst-scientist hybrid delivering end to end Python workflows, reproducible analytics, and custom visualisation. Build tools that standardise classification rules and automate reporting. Write clean, documented code and move reliably from ingestion to decision-ready insight in lean teams.',
   coreSkills:
-    "Mathematics & Statistics: Linear algebra (eigendecomposition, SVD), calculus (gradients), probability (Bayes, common distributions), statistical inference (hypothesis testing, confidence intervals), optimisation (gradient descent, regularisation), time-series analysis\n" +
-    "Machine Learning: Supervised learning (regression, classification), feature engineering, model evaluation (ROC/PR, calibration), cross-validation and time-aware validation; libraries: scikit-learn, XGBoost, basic PyTorch\n" +
-    "Data & Analysis: Python, Pandas, NumPy, SQL\n" +
-    "Pipelines & ETL: Data pipeline development, ETL design, ingestion/validation, version control (Git), APIs\n" +
-    "Dashboards & Visualisation: Power BI, Matplotlib, Plotly, geospatial visualisation, reporting automation\n" +
-    "Big Data & Cloud (working knowledge): PySpark/Spark, Databricks, Azure Synapse",
+    'Mathematics & Statistics: Linear algebra (eigendecomposition, SVD), calculus (gradients), probability (Bayes, common distributions), statistical inference (hypothesis testing, confidence intervals), optimisation (gradient descent, regularisation), time-series analysis\n' +
+    'Machine Learning: Supervised learning (regression, classification), feature engineering, model evaluation (ROC/PR, calibration), cross-validation and time-aware validation; libraries: scikit-learn, XGBoost, basic PyTorch\n' +
+    'Data & Analysis: Python, Pandas, NumPy, SQL\n' +
+    'Pipelines & ETL: Data pipeline development, ETL design, ingestion/validation, version control (Git), APIs\n' +
+    'Dashboards & Visualisation: Power BI, Matplotlib, Plotly, geospatial visualisation, reporting automation\n' +
+    'Big Data & Cloud (working knowledge): PySpark/Spark, Databricks, Azure Synapse',
   experience: [
     {
-      role: "Data and Research Analyst",
-      company: "ScaleUp Institute",
-      dates: "05/2024 – Present",
-      location: "London, UK",
+      role: 'Data and Research Analyst',
+      company: 'ScaleUp Institute',
+      dates: '05/2024 – Present',
+      location: 'London, UK',
       bullets: [
-        "Delivered fast-paced analysis for leadership and research teams, turning stakeholder questions into clear, actionable findings.",
-        "Built Python and SQL pipelines for ingestion, cleaning, validation, and analysis to produce reproducible reports and datasets.",
-        "Created interactive visuals and dashboards, including a reusable chart generator in Python used in reports and internal reviews.",
-        "Built internal tools that standardise classification and document methods; automated recurring reports to reduce manual effort.",
-        "Designed a lightweight database and data dictionary/source register to consolidate core sources; introduced version control for consistency.",
-        "Produced analysis used in reports for policy and ecosystem stakeholders, supporting initiatives on UK business growth."
+        'Delivered fast-paced analysis for leadership and research teams, turning stakeholder questions into clear, actionable findings.',
+        'Built Python and SQL pipelines for ingestion, cleaning, validation, and analysis to produce reproducible reports and datasets.',
+        'Created interactive visuals and dashboards, including a reusable chart generator in Python used in reports and internal reviews.',
+        'Built internal tools that standardise classification and document methods; automated recurring reports to reduce manual effort.',
+        'Designed a lightweight database and data dictionary/source register to consolidate core sources; introduced version control for consistency.',
+        'Produced analysis used in reports for policy and ecosystem stakeholders, supporting initiatives on UK business growth.'
       ]
     },
     {
-      role: "Data Science Intern",
-      company: "Avanti West Coast",
-      dates: "06/2023 – 09/2023",
-      location: "Birmingham, UK",
+      role: 'Data Science Intern',
+      company: 'Avanti West Coast',
+      dates: '06/2023 – 09/2023',
+      location: 'Birmingham, UK',
       bullets: [
-        "Identified business-driven insights from company datasets using data science methods.",
-        "Analyzed ticket sales and earnings against external factors such as GDP indicators.",
-        "Used SQL for extraction, R for cleaning, and Python (XGBoost, feed-forward neural networks) for modeling; built Power BI dashboards.",
-        "Isolated five GDP-linked sectors with the largest impact on ticket sales and earnings.",
-        "Built a forecasting approach to support planning and decision making."
+        'Identified business-driven insights from company datasets using data science methods.',
+        'Analyzed ticket sales and earnings against external factors such as GDP indicators.',
+        'Used SQL for extraction, R for cleaning, and Python (XGBoost, feed-forward neural networks) for modeling; built Power BI dashboards.',
+        'Isolated five GDP-linked sectors with the largest impact on ticket sales and earnings.',
+        'Built a forecasting approach to support planning and decision making.'
       ]
     },
     {
-      role: "DevOps Engineer",
-      company: "Cognizant",
-      dates: "10/2020 – 09/2022",
-      location: "Chennai, India",
+      role: 'DevOps Engineer',
+      company: 'Cognizant',
+      dates: '10/2020 – 09/2022',
+      location: 'Chennai, India',
       bullets: [
-        "Automated CI/CD and containerised workloads with Docker and Kubernetes on Azure and IBM Cloud to improve release reliability."
+        'Automated CI/CD and containerised workloads with Docker and Kubernetes on Azure and IBM Cloud to improve release reliability.'
       ]
     }
   ],
   education: [
-    { degree: "MSc Data Science", school: "Lancaster University", dates: "2023", location: "Lancaster, UK" },
-    { degree: "B.Tech Computer Science", school: "Galgotias University", dates: "2020", location: "Noida, India" },
+    { degree: 'MSc Data Science', school: 'Lancaster University', dates: '2023', location: 'Lancaster, UK' },
+    { degree: 'B.Tech Computer Science', school: 'Galgotias University', dates: '2020', location: 'Noida, India' },
   ],
   projects: [
     {
-      title: "UK Scaleup Cluster Map",
-      org: "ScaleUp Institute",
-      dates: "2024",
-      location: "London",
+      title: 'UK Scaleup Cluster Map',
+      org: 'ScaleUp Institute',
+      dates: '2024',
+      location: 'London',
       bullets: [
-        "Interactive web application for exploring company clusters by sector.",
-        "Implemented map layers (polygons and points), filters, and responsive UI using HTML, CSS, JavaScript, and Leaflet.",
-        "Automated data prep and deployed via GitHub Pages; documented source notes and update cadence."
+        'Interactive web application for exploring company clusters by sector.',
+        'Implemented map layers (polygons and points), filters, and responsive UI using HTML, CSS, JavaScript, and Leaflet.',
+        'Automated data prep and deployed via GitHub Pages; documented source notes and update cadence.'
       ],
     },
     {
-      title: "Automated Sector Classification Tool",
-      org: "ScaleUp Institute",
-      dates: "2024",
-      location: "London",
+      title: 'Automated Sector Classification Tool',
+      org: 'ScaleUp Institute',
+      dates: '2024',
+      location: 'London',
       bullets: [
-        "Python-based tool that assigns sectors to uploaded company lists using configurable rules.",
-        "Produces clean CSV outputs and distribution summaries; reduced manual tagging effort and standardised classifications across research tasks.",
-        "Includes method notes and criteria for reuse."
+        'Python-based tool that assigns sectors to uploaded company lists using configurable rules.',
+        'Produces clean CSV outputs and distribution summaries; reduced manual tagging effort and standardised classifications across research tasks.',
+        'Includes method notes and criteria for reuse.'
       ],
     },
     {
-      title: "Face2Sketch and Sketch2Face",
-      org: "Lancaster University",
-      dates: "2023",
-      location: "Lancaster",
+      title: 'Face2Sketch and Sketch2Face',
+      org: 'Lancaster University',
+      dates: '2023',
+      location: 'Lancaster',
       bullets: [
-        "Built data pipelines and trained two autoencoders plus a conditional GAN to translate faces <-> sketches.",
-        "Evaluated reconstruction quality and stability; documented the training workflow for reproducibility."
+        'Built data pipelines and trained two autoencoders plus a conditional GAN to translate faces <-> sketches.',
+        'Evaluated reconstruction quality and stability; documented the training workflow for reproducibility.'
       ],
     },
     {
-      title: "Battle Tank via Multi-Agent RL",
-      org: "Lancaster University",
-      dates: "2023",
-      location: "Lancaster",
+      title: 'Battle Tank via Multi-Agent RL',
+      org: 'Lancaster University',
+      dates: '2023',
+      location: 'Lancaster',
       bullets: [
-        "Created a grid-world environment and implemented MADDPG for cooperative/competitive agents.",
-        "Tuned reward shaping and evaluation to demonstrate emergent tactics and improved episode returns over baselines."
+        'Created a grid-world environment and implemented MADDPG for cooperative/competitive agents.',
+        'Tuned reward shaping and evaluation to demonstrate emergent tactics and improved episode returns over baselines.'
       ],
     }
   ],
   // Keep tags tight for ATS keyword match; duplicates okay.
   skills: [
-    "Python","Pandas","NumPy","SQL","scikit-learn","XGBoost","PyTorch (basic)",
-    "Power BI","Matplotlib","Plotly","Leaflet","Git","APIs",
-    "ETL","Data pipelines","Statistical inference","Hypothesis testing","Linear algebra",
-    "Time-series analysis","Azure","Spark","Databricks","Azure Synapse"
+    'Python','Pandas','NumPy','SQL','scikit-learn','XGBoost','PyTorch (basic)',
+    'Power BI','Matplotlib','Plotly','Leaflet','Git','APIs',
+    'ETL','Data pipelines','Statistical inference','Hypothesis testing','Linear algebra',
+    'Time-series analysis','Azure','Spark','Databricks','Azure Synapse'
   ],
   publications: []
 };
@@ -672,66 +669,36 @@ function PrintStyles() {
   );
 }
 
-// ========================= Types ========================= //
-type ResumeData = {
-  header: { name: string; title: string; phone: string; email: string; linkedin: string; location: string };
-  summary: string;
-  coreSkills?: string;
-  experience: Experience[];
-  education: Education[];
-  projects: Project[];
-  skills: string[];
-  publications: Publication[];
-};
-
-type Experience = { role: string; company: string; dates: string; location?: string; bullets: string[] };
-
-type Education = { degree: string; school: string; dates: string; location?: string };
-
-type Project = { title: string; org: string; dates: string; location?: string; bullets: string[] };
-
-type Publication = { title: string; venue: string; meta: string; summary?: string };
-
-type EditorProps = {
-  data: ResumeData;
-  onChange: (path: string, value: any) => void;
-  addItem: (path: keyof ResumeData, template: any) => void;
-  removeItem: (path: keyof ResumeData, idx: number) => void;
-  moveItem: (path: keyof ResumeData, idx: number, dir: -1 | 1) => void;
-};
-
-type TestResult = { name: string; pass: boolean; message?: string };
-
 // ========================= Tests ========================= //
-function runBasicTests(current: ResumeData): TestResult[] {
-  const results: TestResult[] = [];
-  const assert = (name: string, cond: boolean, message = "") => results.push({ name, pass: !!cond, message });
+function runBasicTests(current) {
+  const results = [];
+  const assert = (name, cond, message = '') => results.push({ name, pass: !!cond, message });
 
-  // Test 1: defaultData header shape
-  assert("header has required fields", !!current.header && !!current.header.name && !!current.header.email && !!current.header.phone);
+  // Test 1: header shape
+  assert('header has required fields', !!current.header && !!current.header.name && !!current.header.email && !!current.header.phone);
 
-  // Test 2: setDeep updates nested property without mutating
+  // Test 2: setDeep immutability
   const before = JSON.stringify(current);
-  const updated = setDeep(current, "header.title", "Test Title");
+  const updated = setDeep(current, 'header.title', 'Test Title');
   const afterOriginalUnchanged = JSON.stringify(current) === before;
-  assert("setDeep does not mutate original", afterOriginalUnchanged);
-  assert("setDeep updated value", (updated.header.title as string) === "Test Title");
+  assert('setDeep does not mutate original', afterOriginalUnchanged);
+  assert('setDeep updated value', updated.header.title === 'Test Title');
 
   // Test 3: Experience items have bullets array
-  assert("experience[0] has bullets array", Array.isArray(current.experience?.[0]?.bullets));
+  assert('experience[0] has bullets array', Array.isArray(current.experience?.[0]?.bullets));
 
   // Test 4: Core skills present and includes Python
-  assert("coreSkills contains Python", (current.coreSkills || "").toLowerCase().includes("python"));
+  assert('coreSkills contains Python', (current.coreSkills || '').toLowerCase().includes('python'));
 
-  // Test 5: blank factories return correct empty structures
+  // Test 5: blank factories shape
   const bE = blankExperience();
   const bEd = blankEducation();
   const bP = blankProject();
   const bPub = blankPublication();
-  assert("blankExperience shape", !!bE && "role" in bE && Array.isArray(bE.bullets));
-  assert("blankEducation shape", !!bEd && "degree" in bEd);
-  assert("blankProject shape", !!bP && "title" in bP && Array.isArray(bP.bullets));
-  assert("blankPublication shape", !!bPub && "title" in bPub && typeof bPub.summary === "string");
+  assert('blankExperience shape', !!bE && 'role' in bE && Array.isArray(bE.bullets));
+  assert('blankEducation shape', !!bEd && 'degree' in bEd);
+  assert('blankProject shape', !!bP && 'title' in bP && Array.isArray(bP.bullets));
+  assert('blankPublication shape', !!bPub && 'title' in bPub && typeof bPub.summary === 'string');
 
   return results;
 }
